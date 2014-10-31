@@ -1,53 +1,7 @@
-import sqlite3
-from flask import Flask, request, session, g, redirect, url_for, \
-     abort, render_template, flash
+from flask import request, session, redirect, url_for, abort, render_template, flash
 
-# configuration
-DATABASE = '/tmp/flaskr.db'
-DEBUG = True
-SECRET_KEY = 'development key'
-USERNAME = 'admin'
-PASSWORD = 'default'
-
-# create our little application :)
-app = Flask(__name__)
-app.config.from_object(__name__)
-
-#####################
-## DB Methods
-
-def connect_to_database():
-    return sqlite3.connect(app.config['DATABASE'])
-
-def init_db():
-    from contextlib import closing
-    with app.app_context():
-        db = get_db()
-        with app.open_resource('schema.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
-
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = connect_to_database()
-        db.row_factory = sqlite3.Row
-    return db
-
-def query_db(query, args=(), one=False):
-    cur = get_db().execute(query, args)
-    rv = cur.fetchall()
-    cur.close()
-    return (rv[0] if rv else None) if one else rv
-
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
-
-#####################
-## Routing
+from buddly import app
+from buddly.db import get_db
 
 @app.route('/')
 def show_entries():
@@ -84,9 +38,4 @@ def logout():
     session.pop('logged_in', None)
     flash('You were logged out')
     return redirect(url_for('show_entries'))
-
-#####################
-
-if __name__ == '__main__':
-    app.run()
 
