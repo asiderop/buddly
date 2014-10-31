@@ -16,7 +16,7 @@ app.config.from_object(__name__)
 #####################
 ## DB Methods
 
-def connect_db():
+def connect_to_database():
     return sqlite3.connect(app.config['DATABASE'])
 
 def init_db():
@@ -51,7 +51,7 @@ def close_connection(exception):
 
 @app.route('/')
 def show_entries():
-    cur = g.db.execute('select name, email from users order by id desc')
+    cur = get_db().execute('select name, email from users order by id desc')
     entries = [dict(name=row[0], email=row[1]) for row in cur.fetchall()]
     return render_template('show_entries.html', entries=entries)
 
@@ -59,9 +59,9 @@ def show_entries():
 def add_entry():
     if not session.get('logged_in'):
         abort(401)
-    g.db.execute('insert into users (name, email) values (?, ?)',
+    get_db().execute('insert into users (name, email) values (?, ?)',
                  [request.form['name'], request.form['email']])
-    g.db.commit()
+    get_db().commit()
     flash('New entry was successfully posted')
     return redirect(url_for('show_entries'))
 
