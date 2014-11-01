@@ -5,7 +5,7 @@ from buddly.db import get_db
 
 @app.route('/')
 def show_entries():
-    cur = get_db().execute('select name, email from users order by id desc')
+    cur = get_db().execute('select name, email from buddy order by name desc')
     entries = [dict(name=row[0], email=row[1]) for row in cur.fetchall()]
     return render_template('show_entries.html', entries=entries)
 
@@ -13,7 +13,7 @@ def show_entries():
 def add_entry():
     if not session.get('logged_in'):
         abort(401)
-    get_db().execute('insert into users (name, email) values (?, ?)',
+    get_db().execute('insert into buddy (name, email) values (?, ?)',
                  [request.form['name'], request.form['email']])
     get_db().commit()
     flash('New entry was successfully posted')

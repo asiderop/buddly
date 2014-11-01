@@ -3,9 +3,6 @@ from sqlite3 import connect, Row
 
 from buddly import app
 
-def connect_to_database():
-    return connect(app.config['DATABASE'])
-
 def init_db():
     with app.app_context():
         db = get_db()
@@ -16,8 +13,9 @@ def init_db():
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = connect_to_database()
+        db = g._database = connect(app.config['DATABASE'])
         db.row_factory = Row
+        db.execute('PRAGMA foreign_keys = ON;')
     return db
 
 def query_db(query, args=(), one=False):
