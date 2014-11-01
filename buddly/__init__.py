@@ -1,7 +1,7 @@
 from flask import Flask
 
 # configuration
-DATABASE = '/tmp/flaskr.db'
+DATABASE = '/tmp/buddly.db'
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'

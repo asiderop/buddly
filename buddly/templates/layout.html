@@ -1,10 +1,10 @@
 <!doctype html>
-<title>Flaskr</title>
+<title>Buddly</title>
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/normalize.css') }}">
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/main.css') }}">
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/style.css') }}">
 <div class=page>
-  <h1>Flaskr</h1>
+  <h1>Buddly</h1>
   <div class=metanav>
   {% if not session.logged_in %}
     <a href="{{ url_for('login') }}">log in</a>
