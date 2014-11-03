@@ -1,7 +1,6 @@
 from flask import request, session, redirect, url_for, abort, render_template, flash
 
-from buddly import app
-from buddly.db import get_db
+from buddly import app, db
 
 @app.route('/')
 def show_entries():
