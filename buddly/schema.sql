@@ -1,43 +1,43 @@
 -- buddy table contains all user information
 drop table if exists buddy;
 create table buddy (
-    id integer primary key autoincrement,
+    id_ integer primary key autoincrement,
+    hash_ text not null unique,
     name text not null,
-    email text not null unique,
-    hash text not null unique
+    email text not null unique
 );
 
 -- event table contains information about a single gift exchange event
 drop table if exists event;
 create table event (
-    id integer primary key autoincrement,
+    id_ integer primary key autoincrement,
     name text not null,
     description text not null,
     image blob,
-    start_date real,
-    end_date real
+    start_date timestamp
 );
 
--- admin table maps events to owners
-drop table if exists admin;
-create table admin (
-    buddyid integer not null,
-    eventid integer not null,
-    primary key (buddyid, eventid),
-    foreign key (buddyid) references buddy(id),
-    foreign key (eventid) references event(id)
+-- the table maps an event to buddies (and owners)
+drop table if exists event_to_buddies;
+create table event_to_buddies (
+    event_id integer not null,
+    buddy_id integer not null,
+    is_owner integer default 0,
+    primary key (event_id, buddy_id),
+    foreign key (buddy_id) references buddy(id_),
+    foreign key (event_id) references event(id_)
 );
 
 -- pair table maps santas to buddies for an event
 drop table if exists pair;
 create table pair (
-    santaid integer not null,
-    buddyid integer not null,
-    eventid integer not null,
-    primary key (santaid, buddyid, eventid),
-    check (santaid != buddyid),
-    foreign key (santaid) references buddy(id),
-    foreign key (buddyid) references buddy(id),
-    foreign key (eventid) references event(id)
+    santa_id integer not null,
+    buddy_id integer not null,
+    event_id integer not null,
+    primary key (santa_id, buddy_id, event_id),
+    check (santa_id != buddy_id),
+    foreign key (santa_id) references buddy(id_),
+    foreign key (buddy_id) references buddy(id_),
+    foreign key (event_id) references event(id_)
 );
 
