@@ -6,10 +6,10 @@
 <div class=page>
   <h1>Buddly</h1>
   <div class=metanav>
-  {% if not session.logged_in %}
+  {% if not session.user %}
     <a href="{{ url_for('login') }}">log in</a>
   {% else %}
-    <a href="{{ url_for('logout') }}">log out</a>
+    Hi {{ session.user }}. <a href="{{ url_for('logout') }}">log out</a>
   {% endif %}
   </div>
   {% for message in get_flashed_messages() %}
