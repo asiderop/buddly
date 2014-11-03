@@ -2,7 +2,7 @@ from functools import wraps
 from flask import request, session, redirect, url_for, abort, render_template, flash
 
 from buddly import app
-from buddly.db import get_db
+from buddly.db import get_db, query_db
 
 
 def login_required(f):
@@ -15,9 +15,10 @@ def login_required(f):
 
 @app.route('/')
 def show_entries():
-    cur = get_db().execute('select name, email from buddy order by name desc')
+    sql = 'select name, email from buddy order by name desc'
+    cur = get_db().execute(sql)
     entries = [dict(name=row[0], email=row[1]) for row in cur.fetchall()]
-    return render_template('show_entries.html', entries=entries)
+    return render_template('show_entries.html', entries=query_db(sql))
 
 @app.route('/add', methods=['POST'])
 @login_required
