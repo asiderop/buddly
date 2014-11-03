@@ -1,7 +1,8 @@
 from uuid import uuid4 as uuid
 from collections import defaultdict
+from sqlite3 import IntegrityError
 
-from buddly.db import query_db
+from buddly.db import query_db, get_db
 
 
 class BaseModel(object):
@@ -19,7 +20,10 @@ class Buddy(BaseModel):
         self.email = email
 
         # { Event : [ Buddy, ] }
-        self.buddies = None
+        self.buddies = defaultdict(list)
+
+    def __repr__(self):
+        return '<Buddy %r>' % self.name
 
     @classmethod
     def from_db(cls, email=None, hash_=None, id_=None):
@@ -68,8 +72,36 @@ class Buddy(BaseModel):
 
         return self.buddies.values()
 
-    def __repr__(self):
-        return '<Buddy %r>' % self.name
+    def commit(self):
+        ev_sql = 'INSERT INTO event_to_buddy (event_id, buddy_id) VALUES (?, ?)'
+        bud_sql = 'INSERT INTO pair (santa_id, buddy_id, event_id) VALUES (?, ?, ?)'
+
+        if self.id_ is None:
+            try:
+                with get_db():
+                    # new buddy, try to insert into db
+                    sql = 'INSERT INTO buddy (hash_, name, email) VALUES (?, ?, ?)'
+                    get_db().execute(sql, (self.hash_, self.name, self.email))
+
+                    sql = 'SELECT id_ FROM buddy' \
+                          ' WHERE hash_ = ?'
+                    r = query_db(sql, [self.hash_], one=True)
+                    self.id_ = r['id_']
+
+                    for (ev, bud_list) in self.buddies.items():
+                        if ev.id_ is None:
+                            raise NotImplementedError('event does not exist?')
+                        get_db().execute(ev_sql, [ev.id_, self.id_])
+                        for bud in bud_list:
+                            if bud.id_ is None:
+                                raise NotImplementedError('buddy does not exist?')
+                            get_db().execute(bud_sql, [self.id_, bud.id_, ev.id_])
+
+            except IntegrityError:
+                return None
+
+        else:
+            raise NotImplementedError('cannot do update')
 
 
 class Event(BaseModel):
