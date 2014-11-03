@@ -1,19 +1,21 @@
 import os
-import buddly
 import unittest
 import tempfile
 
+from buddly.db import init_db
+from buddly import app
 
-class FlaskrTestCase(unittest.TestCase):
+
+class BuddlyTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.db_fd, buddly.app.config['DATABASE'] = tempfile.mkstemp()
-        self.app = buddly.app.test_client()
-        buddly.init_db()
+        self.db_fd, app.config['DATABASE'] = tempfile.mkstemp()
+        self.app = app.test_client()
+        init_db()
 
     def tearDown(self):
         os.close(self.db_fd)
-        os.unlink(buddly.app.config['DATABASE'])
+        os.unlink(app.config['DATABASE'])
 
     def login(self, username, password):
         return self.app.post('/login', data=dict(
