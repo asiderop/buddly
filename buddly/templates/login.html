@@ -2,13 +2,19 @@
 {% block body %}
   <h2>Login</h2>
   {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
-  <form action="{{ url_for('login') }}" method=post>
-    <dl>
-      <dt>Username:
-      <dd><input type=text name=username>
-      <dt>Password:
-      <dd><input type=password name=password>
-      <dd><input type=submit value=Login>
-    </dl>
-  </form>
+  {% if not session.user %}
+    <p>To access Buddly, use your unique link in the email we sent you.
+        If you lost that one or it's not working, enter your email below and we'll send you another.</p>
+
+    <form action="{{ url_for('signup') }}" method=post>
+      <dl>
+        <dt>Email:
+        <dd><input type="text" name="email">
+        <dd><input type="submit" value="Send Email">
+        <input type="hidden" name="action" value="remind" />
+      </dl>
+    </form>
+  {% else %}
+    <p>Hi, {{ session.user }}. Go to your <a href="{{ url_for('show_entries') }}">events</a>!</p>
+  {% endif %}
 {% endblock %}

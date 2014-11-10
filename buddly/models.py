@@ -83,6 +83,7 @@ class Buddy(BaseModel):
                     sql = 'INSERT INTO buddy (hash_, name, email) VALUES (?, ?, ?)'
                     get_db().execute(sql, (self.hash_, self.name, self.email))
 
+                    '''
                     sql = 'SELECT id_ FROM buddy' \
                           ' WHERE hash_ = ?'
                     r = query_db(sql, [self.hash_], one=True)
@@ -96,9 +97,17 @@ class Buddy(BaseModel):
                             if bud.id_ is None:
                                 raise NotImplementedError('buddy does not exist?')
                             get_db().execute(bud_sql, [self.id_, bud.id_, ev.id_])
+                    '''
+
+                    sql = 'SELECT * FROM buddy' \
+                          ' WHERE ? = hash_'
+                    row = query_db(sql, [self.hash_], one=True)
+
+                    assert row is not None
+                    self.id_ = row['id_']
 
             except IntegrityError:
-                return None
+                raise
 
         else:
             raise NotImplementedError('cannot do update')

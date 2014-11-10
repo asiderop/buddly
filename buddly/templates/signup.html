@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Sign Up</h2>
+  {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+  {% if not session.user %}
+    {% if message %}
+      <p>{{ message }}</p>
+    {% else %}
+      <p>To sign-up, enter your name and email address below.</p>
+      <form action="{{ url_for('signup') }}" method=post>
+        <dl>
+          <dt>Name:
+          <dd><input type="text" name="name">
+          <dt>Email:
+          <dd><input type="text" name="email">
+          <dd><input type="submit" value="Sign Up">
+          <input type="hidden" name="action" value="signup" />
+        </dl>
+      </form>
+    {% endif %}
+  {% else %}
+    <p>Hi, {{ session.user }}. Go to your <a href="{{ url_for('show_entries') }}">events</a>!</p>
+  {% endif %}
+{% endblock %}
