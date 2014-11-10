@@ -1,0 +1,12 @@
+<!doctype html>
+<div class=page>
+Hi, {{ b.name }}.
+
+You now have an account on <a Buddly, the super friendly secret santa gift exchange.
+
+To log in, just use this link:
+
+  {{ url_for('login', _external=True, h=b.hash_) }}
+
+If you get stuck for any reason, just reach out to your event admin.
+</div>

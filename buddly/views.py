@@ -2,7 +2,7 @@ from functools import wraps
 from flask import request, session, redirect, url_for, abort, render_template, flash
 from sqlite3 import IntegrityError
 
-from buddly import app
+from buddly import app, mail
 from buddly.db import get_db, query_db
 from buddly.models import Buddy
 
@@ -55,9 +55,15 @@ def signup():
 
 
 def send_signup_email(buddy, action):
+    from flask_mail import Message
+
     error = None
     message = None
     assert isinstance(buddy, Buddy)
+
+    msg = Message("Hello", recipients=["alexander@thequery.net"])
+    msg.html = render_template('email-signup.html', b=buddy)
+    mail.send(msg)
 
     if 'signup' == action:
         message = "Nice! We're sending an email to %s with all the deets." % buddy.email
@@ -71,10 +77,10 @@ def send_signup_email(buddy, action):
 
 @app.route('/login', methods=['GET'])
 def login(n=None):
-    if 'hash' not in request.args:
+    if 'h' not in request.args:
         return render_template('login.html')
 
-    h = request.args['hash']
+    h = request.args['h']
     b = Buddy.from_db(hash_=h)
 
     if b is None:
