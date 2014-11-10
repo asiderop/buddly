@@ -27,19 +27,19 @@ class Buddy(BaseModel):
 
     @classmethod
     def from_db(cls, email=None, hash_=None, id_=None):
-        assert email is not None ^ hash_ is not None ^ id_ is not None
+        assert (email is not None) ^ (hash_ is not None) ^ (id_ is not None)
         # the above xor (with three operands) will result to True when all three operands are
         # True; so we specifically check against that as well
-        assert email is None or hash_ is None or id_ is None
+        assert (email is None) or (hash_ is None) or (id_ is None)
 
         sql = 'SELECT * FROM buddy ' \
-              'WHERE ? = email OR ? = hash_ OR ? = id_'
+              ' WHERE ? = email OR ? = hash_ OR ? = id_'
         row = query_db(sql, [email, hash_, id_], one=True)
 
         if row is None:
             return None
 
-        return cls(*row)
+        return cls(**row)
 
     def get_events(self, from_db=False):
         sql = 'SELECT * FROM event' \
