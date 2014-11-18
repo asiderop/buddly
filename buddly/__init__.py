@@ -9,6 +9,7 @@ DATABASE = '/tmp/buddly.db'
 DEBUG = True
 TESTING = True
 SECRET_KEY = 'development key'
+MAX_CONTENT_LENGTH = 2 * 1024 * 1024  # 2mb
 
 ## main config
 MAIL_DEFAULT_SENDER = 'buddly-no-reply'

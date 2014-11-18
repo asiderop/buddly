@@ -13,7 +13,7 @@ class Buddy(BaseModel):
 
     def __init__(self, name, email, id_=None, hash_=None):
 
-        self.id_ = id_  # if NULL, let db assign id
+        self.id_ = id_  # if None, let db assign id
         self.hash_ = hash_ or uuid().hex  # if NULL, create new hash
 
         self.name = name
@@ -81,7 +81,7 @@ class Buddy(BaseModel):
                 with get_db():
                     # new buddy, try to insert into db
                     sql = 'INSERT INTO buddy (hash_, name, email) VALUES (?, ?, ?)'
-                    get_db().execute(sql, (self.hash_, self.name, self.email))
+                    cur = get_db().execute(sql, (self.hash_, self.name, self.email))
 
                     '''
                     sql = 'SELECT id_ FROM buddy' \
@@ -99,12 +99,7 @@ class Buddy(BaseModel):
                             get_db().execute(bud_sql, [self.id_, bud.id_, ev.id_])
                     '''
 
-                    sql = 'SELECT * FROM buddy' \
-                          ' WHERE ? = hash_'
-                    row = query_db(sql, [self.hash_], one=True)
-
-                    assert row is not None
-                    self.id_ = row['id_']
+                    self.id_ = cur.lastrowid
 
             except IntegrityError:
                 raise
@@ -114,10 +109,10 @@ class Buddy(BaseModel):
 
 
 class Event(BaseModel):
-    def __init__(self, name, desc=None, image=None, start_date=None, id_=None):
-        self.id_ = id_ or None  # if NULL, let db assign id
+    def __init__(self, name, description=None, image=None, start_date=None, id_=None):
+        self.id_ = id_   # if None, let db assign id
         self.name = name
-        self.desc = desc or ''
+        self.description = description or ''
         self.image = image
         self.start_date = start_date
 
@@ -126,3 +121,34 @@ class Event(BaseModel):
 
     def __repr__(self):
         return '<Event %r>' % self.name
+
+    @classmethod
+    def from_db(cls, id_):
+
+        sql = 'SELECT * FROM event ' \
+              ' WHERE ? = id_'
+        row = query_db(sql, [id_], one=True)
+
+        if row is None:
+            return None
+
+        return cls(**row)
+
+    def commit(self):
+        ev_sql = 'INSERT INTO event_to_buddy (event_id, buddy_id) VALUES (?, ?)'
+        bud_sql = 'INSERT INTO pair (santa_id, buddy_id, event_id) VALUES (?, ?, ?)'
+
+        if self.id_ is None:
+            try:
+                with get_db():
+                    # new buddy, try to insert into db
+                    sql = 'INSERT INTO event (name, description, image, start_date) VALUES (?, ?, ?, ?)'
+                    cur = get_db().execute(sql, (self.name, self.description, self.image, self.start_date))
+
+                    self.id_ = cur.lastrowid
+
+            except IntegrityError:
+                raise
+
+        else:
+            raise NotImplementedError('cannot do update')

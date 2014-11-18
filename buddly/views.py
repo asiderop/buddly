@@ -4,7 +4,8 @@ from sqlite3 import IntegrityError
 
 from buddly import app, mail
 from buddly.db import get_db, query_db
-from buddly.models import Buddy
+from buddly.models import Buddy, Event
+from buddly.forms import EventCreation
 
 
 ####################
@@ -101,22 +102,36 @@ def logout():
 
 
 ####################
-##
+## Forms and Such
 
 @app.route('/')
 def show_entries():
-    sql = 'select name, email from buddy order by name desc'
+    sql = 'select name, description, image from event order by name desc'
     cur = get_db().execute(sql)
     entries = [dict(name=row[0], email=row[1]) for row in cur.fetchall()]
     return render_template('show_entries.html', entries=query_db(sql))
 
 
-@app.route('/add', methods=['POST'])
+@app.route('/event/<id_>', methods=['GET'])
+@app.route('/event/', methods=['GET', 'POST'])
 @login_required
-def add_entry():
-    get_db().execute('insert into buddy (name, email) values (?, ?)',
-                 [request.form['name'], request.form['email']])
-    get_db().commit()
-    flash('New entry was successfully posted')
-    return redirect(url_for('show_entries'))
+def event(id_=None):
+    from base64 import b64encode
+    from wand.image import Image
 
+    form = EventCreation()
+    if request.method == 'POST':
+        if form.validate():
+            f = request.files[form.image.name]
+            with Image(file=f.stream) as i:
+                i.transform(resize='120x120>')
+                base64_image = b64encode(i.make_blob('png'))
+
+            e = Event(
+                form.name.data,
+                form.description.data,
+                base64_image)
+
+            flash('Thanks for creating.')
+
+    return render_template('event.html', form=form)
