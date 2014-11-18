@@ -83,12 +83,9 @@ class Buddy(BaseModel):
                     sql = 'INSERT INTO buddy (hash_, name, email) VALUES (?, ?, ?)'
                     cur = get_db().execute(sql, (self.hash_, self.name, self.email))
 
-                    '''
-                    sql = 'SELECT id_ FROM buddy' \
-                          ' WHERE hash_ = ?'
-                    r = query_db(sql, [self.hash_], one=True)
-                    self.id_ = r['id_']
+                    self.id_ = cur.lastrowid
 
+                    '''
                     for (ev, bud_list) in self.buddies.items():
                         if ev.id_ is None:
                             raise NotImplementedError('event does not exist?')
@@ -98,8 +95,6 @@ class Buddy(BaseModel):
                                 raise NotImplementedError('buddy does not exist?')
                             get_db().execute(bud_sql, [self.id_, bud.id_, ev.id_])
                     '''
-
-                    self.id_ = cur.lastrowid
 
             except IntegrityError:
                 raise
@@ -135,9 +130,6 @@ class Event(BaseModel):
         return cls(**row)
 
     def commit(self):
-        ev_sql = 'INSERT INTO event_to_buddy (event_id, buddy_id) VALUES (?, ?)'
-        bud_sql = 'INSERT INTO pair (santa_id, buddy_id, event_id) VALUES (?, ?, ?)'
-
         if self.id_ is None:
             try:
                 with get_db():

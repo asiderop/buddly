@@ -1,4 +1,4 @@
-from wtforms import StringField, validators as v
+from wtforms import StringField, TextAreaField, validators as v
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileAllowed
 
@@ -10,8 +10,8 @@ class EventCreation(Form):
         v.DataRequired()
         ])
 
-    description = StringField(
-        'Description', [
+    description = TextAreaField(
+        'Description/Rules', [
         v.Length(min=1, max=252),
         v.DataRequired()
         ])

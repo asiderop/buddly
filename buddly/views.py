@@ -122,16 +122,21 @@ def event(id_=None):
     form = EventCreation()
     if request.method == 'POST':
         if form.validate():
-            f = request.files[form.image.name]
-            with Image(file=f.stream) as i:
-                i.transform(resize='120x120>')
-                base64_image = b64encode(i.make_blob('png'))
+            base64_image = ''
+
+            if form.image.data:
+                f = request.files[form.image.name]
+                with Image(file=f.stream) as i:
+                    i.transform(resize='120x120>')
+                    base64_image = b64encode(i.make_blob('png'))
 
             e = Event(
                 form.name.data,
                 form.description.data,
                 base64_image)
 
-            flash('Thanks for creating.')
+            e.commit()
+
+            flash('Thanks for creating. {}'.format(e.id_))
 
     return render_template('event.html', form=form)
