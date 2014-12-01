@@ -113,6 +113,7 @@ class Event(BaseModel):
 
         # [ Buddy, ]
         self.owners = []
+        self.buddies = []
 
     def __repr__(self):
         return '<Event %r>' % self.name
@@ -120,6 +121,7 @@ class Event(BaseModel):
     @classmethod
     def from_db(cls, id_):
 
+        # lookup event
         sql = 'SELECT * FROM event ' \
               ' WHERE ? = id_'
         row = query_db(sql, [id_], one=True)
@@ -127,17 +129,44 @@ class Event(BaseModel):
         if row is None:
             return None
 
-        return cls(**row)
+        e = cls(**row)
+
+        # lookup buddies for event
+        sql = 'SELECT * FROM event_to_buddies as e2b ' \
+              ' WHERE ? = e2b.event_id'
+        rows = query_db(sql, [e.id_])
+
+        for row in rows:
+            b = Buddy.from_db(id_=row['buddy_id'])
+            assert b is not None
+            e.buddies.append(b)
+            if row['is_owner']:
+                e.owners.append(b)
+
+        return e
 
     def commit(self):
         if self.id_ is None:
+            if len(self.buddies) < 1:
+                raise IntegrityError('event must have at least one buddy')
+            if len(self.owners) < 1:
+                raise IntegrityError('event must have at least one owner')
+
+            for o in self.owners:
+                assert o in self.buddies
+
             try:
                 with get_db():
-                    # new buddy, try to insert into db
+                    # new event, try to insert into db
                     sql = 'INSERT INTO event (name, description, image, start_date) VALUES (?, ?, ?, ?)'
                     cur = get_db().execute(sql, (self.name, self.description, self.image, self.start_date))
 
                     self.id_ = cur.lastrowid
+
+                    for b in self.buddies:
+                        # insert rows to map event to buddies
+                        sql = 'INSERT INTO event_to_buddies (event_id, buddy_id, is_owner) VALUES (?, ?, ?)'
+                        cur = get_db().execute(sql, (self.id_, b.id_, b in self.owners))
 
             except IntegrityError:
                 raise

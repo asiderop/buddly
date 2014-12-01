@@ -1,0 +1,32 @@
+{% from "form-helpers.html" import render_field %}
+
+{% extends "layout.html" %}
+{% block body %}
+
+<h1>Event Buddies</h1>
+
+{% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+
+{% if event %}
+<p>Event: {{ event.name }}</p>
+
+<h2>Remove Buddy from Event</h2>
+<ul>
+{% for b in event.buddies %}
+  <li>{{ b.name }}</li>
+{% endfor %}
+</ul>
+
+<h2>Add Buddy to Event</h2>
+<form id="buddy2event" action="/event/{{ event.id_ }}/buddies" method="POST" enctype="multipart/form-data">
+  <dl>
+    {{ form.hidden_tag() }}
+
+    {{ render_field(form.name) }}
+    {{ render_field(form.email) }}
+  </dl>
+  <p><input type="submit" value="Add">
+</form>
+
+{% endif %}
+{% endblock %}

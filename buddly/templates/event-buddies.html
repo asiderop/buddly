@@ -1,0 +1,47 @@
+{% from "form-helpers.html" import render_field %}
+
+{% extends "layout.html" %}
+{% block body %}
+
+<h2>Add/Remove Buddies to Event</h2>
+
+{% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+
+{% if event %}
+<p>Event: {{ event.name }}</p>
+
+<form action="/event/{{ event.id_ }}/buddies" method="POST" enctype="multipart/form-data">
+  <dl>
+    {{ form.hidden_tag() }}
+    {{ form.buddies }}
+  </dl>
+  <p><input type="submit" value="Save">
+  <p><input type="button" id="add_another_button" value="Add Buddy">
+</form>
+
+<script type="text/javascript" src="{{ url_for('static', filename='js/vendor/jquery-1.11.1.min.js') }}"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+    $('#add_another_button').click(function () {
+        clone_field_list('#buddies > :last');
+    });
+});
+
+function clone_field_list(selector) {
+    var new_element = $(selector).clone(true);
+    var elem_id = new_element.find(':input')[0].id;
+    var elem_num = parseInt(elem_id.replace(/.*-(\d{1,4})-.*/m, '$1')) + 1;
+    new_element.find(':input').each(function() {
+        var id = $(this).attr('id').replace('-' + (elem_num - 1) + '-', '-' + elem_num + '-');
+        $(this).attr({'name': id, 'id': id}).val('').removeAttr('checked');
+    });
+    new_element.find('label').each(function() {
+        var new_for = $(this).attr('for').replace('-' + (elem_num - 1) + '-', '-' + elem_num + '-');
+        $(this).attr('for', new_for);
+    });
+    $(selector).after(new_element);
+}
+</script>
+{% endif %}
+
+{% endblock %}

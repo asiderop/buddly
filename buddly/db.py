@@ -11,6 +11,11 @@ def init_db():
             db.cursor().executescript(f.read())
         db.commit()
 
+def dump_db():
+    with app.app_context():
+        db = get_db()
+        for line in db.iterdump():
+             print('%s\n' % line)
 
 def get_db():
     db = getattr(g, '_database', None)

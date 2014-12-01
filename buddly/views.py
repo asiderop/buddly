@@ -5,7 +5,7 @@ from sqlite3 import IntegrityError
 from buddly import app, mail
 from buddly.db import get_db, query_db
 from buddly.models import Buddy, Event
-from buddly.forms import EventCreation
+from buddly.forms import EventCreation, EventBuddies
 
 
 ####################
@@ -97,6 +97,7 @@ def login(n=None):
 @app.route('/logout')
 def logout():
     session.pop('user', None)
+    session.pop('hash_', None)
     flash('You were logged out')
     return redirect(url_for('show_entries'))
 
@@ -135,8 +136,35 @@ def event(id_=None):
                 form.description.data,
                 base64_image)
 
+            owner = Buddy.from_db(hash_=session.get('hash_'))
+            assert owner is not None
+            e.buddies.append(owner)
+            e.owners.append(owner)
             e.commit()
 
             flash('Thanks for creating. {}'.format(e.id_))
 
-    return render_template('event.html', form=form)
+    return render_template('event-create.html', form=form)
+
+@app.route('/event/<id_>/buddies', methods=['GET', 'POST'])
+@login_required
+def event_buddies(id_):
+    err = None
+    e = Event.from_db(id_)
+    if e is None:
+        return render_template('event-buddy.html', form=None, event=None, error='unknown event')
+
+    form = EventBuddies()
+    if request.method == 'POST':
+        if form.validate():
+            buddy = Buddy.from_db(email=form.email.data)
+            if buddy is None:
+                buddy = Buddy(name=form.name.data, email=form.email.data)
+                buddy.commit()
+            e.buddies.append(buddy)
+            e.commit()
+
+            form = EventBuddies()
+            flash('Buddy added to event.')
+
+    return render_template('event-buddy.html', form=form, event=e, error=err)
