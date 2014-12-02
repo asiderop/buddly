@@ -29,7 +29,8 @@ mail = Mail(app)
 
 # views/routes must be imported after creating app
 import buddly.views
-
+import buddly.views.authentication
+import buddly.views.event
 
 if app.testing:
     def log_message(message, app):
