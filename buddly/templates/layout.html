@@ -10,11 +10,11 @@
 <div class=page>
   <h1>Buddly</h1>
   <div class=metanav>
-  {% if not session.user %}
+  {% if not session.hash_ %}
     <a href="{{ url_for('login') }}">log in</a>
     | <a href="{{ url_for('signup') }}">sign up</a>
   {% else %}
-    hi {{ session.user }}
+    hi {{ session.name }}
     | <a href="{{ url_for('profile') }}">profile</a>
     | <a href="{{ url_for('logout') }}">log out</a>
   {% endif %}

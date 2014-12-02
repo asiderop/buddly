@@ -7,7 +7,7 @@
 
 {% if buddy %}
 
-{% if buddy.name == session['user'] %}
+{% if buddy.hash_ == session.hash_ %}
 
 <h3>Edit Profile</h3>
 <form action="/buddy/{{ buddy.id_ }}" method="POST">

@@ -2,7 +2,7 @@
 {% block body %}
   <h2>Sign Up</h2>
   {% if error %}<p class=error>{{ error }}{% endif %}
-  {% if not session.user %}
+  {% if not session.hash_ %}
     {% if message %}
       <p>{{ message }}</p>
     {% else %}
@@ -19,6 +19,6 @@
       </form>
     {% endif %}
   {% else %}
-    <p>Hi, {{ session.user }}. Go to your <a href="{{ url_for('index') }}">events</a>!</p>
+    <p>Hi, {{ session.name }}. Go to your <a href="{{ url_for('index') }}">events</a>!</p>
   {% endif %}
 {% endblock %}

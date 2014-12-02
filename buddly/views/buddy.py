@@ -28,7 +28,6 @@ def profile(id_=None):
             b.bio = form.bio.data
             try:
                 b.commit()
-                session['user'] = b.name
                 flash('Changes saved.')
             except IntegrityError:
                 err = "Hmm, looks like that someone else is using that email address."

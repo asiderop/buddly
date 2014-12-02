@@ -13,7 +13,7 @@ from buddly.models import Buddy
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get('user'):
+        if not session.get('hash_'):
             return redirect(url_for('login', n=request.url))
         return f(*args, **kwargs)
     return decorated_function
@@ -87,8 +87,8 @@ def login(n=None):
     if b is None:
         return render_template('login.html', error='unknown user')
 
-    session['user'] = b.name
     session['hash_'] = b.hash_
+    session['name'] = b.name  # for convenience in templates
     flash('You were logged in')
     url = n or url_for('index')
     return redirect(url)
@@ -96,8 +96,8 @@ def login(n=None):
 
 @app.route('/logout')
 def logout():
-    session.pop('user', None)
     session.pop('hash_', None)
+    session.pop('name', None)
     flash('You were logged out')
     return redirect(url_for('index'))
 

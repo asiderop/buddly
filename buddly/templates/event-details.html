@@ -1,0 +1,19 @@
+{% from "form-helpers.html" import render_field %}
+
+{% extends "layout.html" %}
+{% block body %}
+
+{% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+
+<h2>Create/Edit Event Details</h2>
+<form action="/event" method="POST" enctype="multipart/form-data">
+  <dl>
+    {{ form.hidden_tag() }}
+    {{ render_field(form.name) }}
+    {{ render_field(form.description) }}
+    {{ render_field(form.image) }}
+  </dl>
+  <p><input type="submit" value="Save">
+</form>
+
+{% endblock %}
