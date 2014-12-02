@@ -25,7 +25,7 @@ def signup():
     message = None
     if request.method == 'POST':
         if 'action' not in request.form:
-            error = 'bad request'
+            error = "Hmm, that's a bad request."
 
         else:
             action = request.form['action']
@@ -38,15 +38,15 @@ def signup():
                 try:
                     b.commit()
                 except IntegrityError:
-                    error = 'a user with that email address already exists'
+                    error = 'Sorry, a user with that email address already exists!'
 
             elif 'remind' == action:
                 b = Buddy.from_db(email=email)
                 if b is None:
-                    error = 'unknown email address'
+                    error = "Sorry, I don't know email address."
 
             else:
-                error = 'unknown action'
+                error = "Sorry, I don't understand that action."
 
             if error is None:
                 # send email
@@ -90,7 +90,7 @@ def login(n=None):
     session['user'] = b.name
     session['hash_'] = b.hash_
     flash('You were logged in')
-    url = n or url_for('show_entries')
+    url = n or url_for('index')
     return redirect(url)
 
 
@@ -99,14 +99,14 @@ def logout():
     session.pop('user', None)
     session.pop('hash_', None)
     flash('You were logged out')
-    return redirect(url_for('show_entries'))
+    return redirect(url_for('index'))
 
 
 ####################
 ## Forms and Such
 
 @app.route('/')
-def show_entries():
+def index():
     sql = 'select name, description, image from event order by name desc'
     cur = get_db().execute(sql)
     entries = [dict(name=row[0], email=row[1]) for row in cur.fetchall()]

@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
   <h2>Sign Up</h2>
-  {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+  {% if error %}<p class=error>{{ error }}{% endif %}
   {% if not session.user %}
     {% if message %}
       <p>{{ message }}</p>
@@ -19,6 +19,6 @@
       </form>
     {% endif %}
   {% else %}
-    <p>Hi, {{ session.user }}. Go to your <a href="{{ url_for('show_entries') }}">events</a>!</p>
+    <p>Hi, {{ session.user }}. Go to your <a href="{{ url_for('index') }}">events</a>!</p>
   {% endif %}
 {% endblock %}

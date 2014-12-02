@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block body %}
   <h2>Login</h2>
-  {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+  {% if error %}<p class=error>{{ error }}{% endif %}
   {% if not session.user %}
     <p>To access Buddly, use your unique link in the email we sent you.
         If you lost that one or it's not working, enter your email below and we'll send you another.</p>
@@ -15,6 +15,6 @@
       </dl>
     </form>
   {% else %}
-    <p>Hi, {{ session.user }}. Go to your <a href="{{ url_for('show_entries') }}">events</a>!</p>
+    <p>Hi, {{ session.user }}. Go to your <a href="{{ url_for('index') }}">events</a>!</p>
   {% endif %}
 {% endblock %}

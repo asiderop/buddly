@@ -14,7 +14,9 @@
     <a href="{{ url_for('login') }}">log in</a>
     | <a href="{{ url_for('signup') }}">sign up</a>
   {% else %}
-    Hi {{ session.user }}. <a href="{{ url_for('logout') }}">log out</a>
+    hi {{ session.user }}
+    {# | <a href="{{ url_for('profile') }}">profile</a> #}
+    | <a href="{{ url_for('logout') }}">log out</a>
   {% endif %}
   </div>
   {% for message in get_flashed_messages() %}
