@@ -8,6 +8,32 @@ create table buddy (
     bio text
 );
 
+-- buddy_list table contains all wish lists
+drop table if exists buddy_list;
+create table buddy_list (
+    id_ integer primary key autoincrement,
+    buddy_id integer not null,
+    type_id integer not null,
+    url text not null,
+    description text,
+    foreign key (buddy_id) references buddy(id_),
+    foreign key (type_id) references list_type(id_)
+);
+
+-- list_type table contains all wish list types
+drop table is exists list_type;
+create table list_type (
+    id_ integer primary key,
+    name text not null,
+    base_url text not null
+);
+
+INSERT INTO list_type VALUES
+    (1, "Buddly",    "http://buddly.thequery.net"),
+    (2, "Amazon",    "https://www.amazon.com"),
+    (3, "Pinterest", "https://www.pinterest.com"),
+    (4, "Elfster",   "https://www.elfster.com");
+
 -- event table contains information about a single gift exchange event
 drop table if exists event;
 create table event (
