@@ -11,13 +11,14 @@ class BaseModel(object):
 
 class Buddy(BaseModel):
 
-    def __init__(self, name, email, id_=None, hash_=None):
+    def __init__(self, name, email, id_=None, hash_=None, bio=None):
 
         self.id_ = id_  # if None, let db assign id
         self.hash_ = hash_ or uuid().hex  # if NULL, create new hash
 
         self.name = name
         self.email = email
+        self.bio = bio
 
         # { Event : [ Buddy, ] }
         self.buddies = defaultdict(list)
@@ -76,12 +77,12 @@ class Buddy(BaseModel):
         ev_sql = 'INSERT INTO event_to_buddy (event_id, buddy_id) VALUES (?, ?)'
         bud_sql = 'INSERT INTO pair (santa_id, buddy_id, event_id) VALUES (?, ?, ?)'
 
-        if self.id_ is None:
-            try:
-                with get_db():
+        try:
+            with get_db():
+                if self.id_ is None:
                     # new buddy, try to insert into db
-                    sql = 'INSERT INTO buddy (hash_, name, email) VALUES (?, ?, ?)'
-                    cur = get_db().execute(sql, (self.hash_, self.name, self.email))
+                    sql = 'INSERT INTO buddy (hash_, name, email, bio) VALUES (?, ?, ?, ?)'
+                    cur = get_db().execute(sql, (self.hash_, self.name, self.email, self.bio))
 
                     self.id_ = cur.lastrowid
 
@@ -96,11 +97,13 @@ class Buddy(BaseModel):
                             get_db().execute(bud_sql, [self.id_, bud.id_, ev.id_])
                     '''
 
-            except IntegrityError:
-                raise
+                else:
+                    # existing buddy, try to update db
+                    sql = 'UPDATE buddy SET hash_ = ?, name = ?, email = ?, bio = ? WHERE ? = id_'
+                    cur = get_db().execute(sql, (self.hash_, self.name, self.email, self.bio, self.id_))
 
-        else:
-            raise NotImplementedError('cannot do update')
+        except IntegrityError:
+            raise
 
 
 class Event(BaseModel):

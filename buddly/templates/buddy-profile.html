@@ -1,0 +1,29 @@
+{% from "form-helpers.html" import render_field %}
+
+{% extends "layout.html" %}
+{% block body %}
+
+{% if error %}<p class=error>{{ error }}{% endif %}
+
+{% if buddy %}
+
+{% if buddy.name == session['user'] %}
+
+<h3>Edit Profile</h3>
+<form action="/buddy/{{ buddy.id_ }}" method="POST">
+  <dl>
+    {{ form.hidden_tag() }}
+    {{ render_field(form.name) }}
+    {{ render_field(form.email) }}
+    {{ render_field(form.bio) }}
+  </dl>
+  <p><input type="submit" value="Save">
+</form>
+
+{% else %}
+  <h3>{{ buddy.name }}</h3>
+  <p>{{ buddy.bio or "(none)" }}</p>
+{% endif %}
+
+{% endif %}
+{% endblock %}

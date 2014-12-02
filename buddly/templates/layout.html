@@ -15,7 +15,7 @@
     | <a href="{{ url_for('signup') }}">sign up</a>
   {% else %}
     hi {{ session.user }}
-    {# | <a href="{{ url_for('profile') }}">profile</a> #}
+    | <a href="{{ url_for('profile') }}">profile</a>
     | <a href="{{ url_for('logout') }}">log out</a>
   {% endif %}
   </div>

@@ -4,7 +4,8 @@ create table buddy (
     id_ integer primary key autoincrement,
     hash_ text not null unique,
     name text not null,
-    email text not null unique
+    email text not null unique,
+    bio text
 );
 
 -- event table contains information about a single gift exchange event
