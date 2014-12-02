@@ -5,15 +5,40 @@
 
 {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
 
-<h2>Create/Edit Event Details</h2>
-<form action="/event" method="POST" enctype="multipart/form-data">
+{% if event %}
+
+<h2>Event Details</h2>
+
+{% if is_owner %}
+<form action="{{ url_for('event_details', id_=event.id_) }}" method="POST" enctype="multipart/form-data">
   <dl>
     {{ form.hidden_tag() }}
     {{ render_field(form.name) }}
     {{ render_field(form.description) }}
     {{ render_field(form.image) }}
   </dl>
-  <p><input type="submit" value="Save">
+  <p>Start Time: {{ event.start_time }}</p>
+  <p><input type="submit" value="Save Changes">
 </form>
+{% else %}
+<h3>{{ event.name }}</h3>
+<p>{{ event.description }}</p>
+<p>Start Time: {{ event.start_time }}</p>
+{% endif %}
 
+<h4>Buddies</h4>
+{% if is_owner and not event.start_date %} <a href="{{ url_for('event_buddies', id_=event.id_) }}">add/remove</a> {% endif %}
+<ul>
+  {% for b in event.buddies %}
+  <li><a href="{{ url_for('profile', id_=b.id_) }}">{{ b.name }}</a> {% if b in event.owners %}(owner){% endif %}</li>
+  {% endfor %}
+</ul>
+
+{% if is_owner %}
+<form action="{{ url_for('event_launch', id_=event.id_) }}" method="POST">
+  <input type="submit" value="Launch Event">
+</form>
+{% endif %}
+
+{% endif %}
 {% endblock %}

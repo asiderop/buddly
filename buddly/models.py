@@ -23,6 +23,9 @@ class Buddy(BaseModel):
         # { Event : [ Buddy, ] }
         self.buddies = defaultdict(list)
 
+    def __eq__(self, other):
+        return self.id_ == other.id_
+
     def __repr__(self):
         return '<Buddy %r>' % self.name
 

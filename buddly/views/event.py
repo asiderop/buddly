@@ -1,18 +1,21 @@
-from flask import request, session, render_template, flash
+from sqlite3 import IntegrityError
+from flask import request, session, render_template, flash, redirect, url_for
+from time import time
 
 from buddly import app
 from buddly.models import Buddy, Event
 from buddly.forms import EventCreation, EventBuddies
 from buddly.views.authentication import login_required
 
-@app.route('/event/<id_>', methods=['GET'])
 @app.route('/event/', methods=['GET', 'POST'])
 @login_required
-def event(id_=None):
+def event_create():
     from base64 import b64encode
     from wand.image import Image
 
+    err = None
     form = EventCreation()
+
     if request.method == 'POST':
         if form.validate():
             base64_image = ''
@@ -32,20 +35,51 @@ def event(id_=None):
             assert owner is not None
             e.buddies.append(owner)
             e.owners.append(owner)
-            e.commit()
 
-            flash('Thanks for creating. {}'.format(e.id_))
+            try:
+                e.commit()
+                flash('Sweet. Your event has been created.')
+            except IntegrityError:
+                err = 'Something went wrong. :('
 
-    return render_template('event-create.html', form=form)
+    return render_template('event-create.html', form=form, error=err)
 
 
-@app.route('/event/<id_>/buddies', methods=['GET', 'POST'])
+@app.route('/event/<id_>/', methods=['GET', 'POST'])
+@login_required
+def event_details(id_):
+    err = None
+    form = None
+
+    b = Buddy.from_db(hash_=session['hash_'])
+    assert b is not None
+
+    e = Event.from_db(id_)
+    if e is None:
+        err = "Sorry, I don't know that event."
+
+    is_owner = b in e.owners
+
+    if is_owner:
+        form = EventCreation()
+        form.name.data = e.name
+        form.description.data = e.description
+
+        if request.method == 'POST':
+            if form.validate():
+                flash('Saved.')
+
+    return render_template('event-details.html', error=err, event=e, form=form, is_owner=is_owner)
+
+@app.route('/event/<id_>/buddies/', methods=['GET', 'POST'])
 @login_required
 def event_buddies(id_):
     err = None
+
     e = Event.from_db(id_)
     if e is None:
-        return render_template('event-buddy.html', form=None, event=None, error='unknown event')
+        err = "Sorry, I don't know that event."
+        return render_template('event-buddy.html', error=err)
 
     form = EventBuddies()
     if request.method == 'POST':
@@ -61,3 +95,18 @@ def event_buddies(id_):
             flash('Buddy added to event.')
 
     return render_template('event-buddy.html', form=form, event=e, error=err)
+
+
+@app.route('/event/<id_>/launch', methods=['POST'])
+@login_required
+def event_launch(id_):
+
+    e = Event.from_db(id_)
+    if e is None:
+        flash("Sorry, I don't know that event.")
+        redirect(url_for('event_details', id_=id_))
+
+    e.start_date = time()
+    e.commit()
+    flash('Your event has launched!')
+    redirect(url_for('event_details', id_=id_))

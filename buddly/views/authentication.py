@@ -97,7 +97,6 @@ def login(n=None):
 @app.route('/logout')
 def logout():
     session.pop('hash_', None)
-    session.pop('name', None)
     flash('You were logged out')
     return redirect(url_for('index'))
 

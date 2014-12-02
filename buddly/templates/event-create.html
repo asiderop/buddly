@@ -5,7 +5,8 @@
 
 {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
 
-<form action="/event/" method="POST" enctype="multipart/form-data">
+<h2>Create Event</h2>
+<form action="{{ url_for('event_create') }}" method="POST" enctype="multipart/form-data">
   <dl>
     {{ form.hidden_tag() }}
     {{ render_field(form.name) }}
