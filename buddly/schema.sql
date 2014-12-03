@@ -21,7 +21,7 @@ create table buddy_list (
 );
 
 -- list_type table contains all wish list types
-drop table is exists list_type;
+drop table if exists list_type;
 create table list_type (
     id_ integer primary key,
     name text not null,
@@ -41,7 +41,8 @@ create table event (
     name text not null,
     description text not null,
     image blob,
-    start_date timestamp
+    start_date timestamp,
+    num_per_santa integer not null default 1
 );
 
 -- the table maps an event to buddies (and owners)
@@ -55,16 +56,26 @@ create table event_to_buddies (
     foreign key (event_id) references event(id_)
 );
 
+-- restrictions table lists santa-buddy pairings that are not allowed
+drop table if exists restrictions;
+create table restrictions (
+    santa_id integer not null,
+    buddy_id integer not null,
+    primary key (santa_id, buddy_id),
+    foreign key (santa_id) references buddy(id_),
+    foreign key (buddy_id) references buddy(id_)
+);
+
 -- pair table maps santas to buddies for an event
 drop table if exists pair;
 create table pair (
+    event_id integer not null,
     santa_id integer not null,
     buddy_id integer not null,
-    event_id integer not null,
-    primary key (santa_id, buddy_id, event_id),
+    primary key (event_id, santa_id),
     check (santa_id != buddy_id),
+    foreign key (event_id) references event(id_),
     foreign key (santa_id) references buddy(id_),
-    foreign key (buddy_id) references buddy(id_),
-    foreign key (event_id) references event(id_)
+    foreign key (buddy_id) references buddy(id_)
 );
 

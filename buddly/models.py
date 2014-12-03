@@ -2,9 +2,10 @@ from uuid import uuid4 as uuid
 from collections import defaultdict
 from sqlite3 import IntegrityError
 from time import time, localtime, asctime
-from random import randint
+from random import seed, randint
 
 from buddly.db import query_db, get_db
+from buddly import app
 
 
 class ApplicationError(Exception):
@@ -32,6 +33,9 @@ class Buddy(BaseModel):
     def __eq__(self, other):
         return self.id_ == other.id_
 
+    def __hash__(self):
+        return hash(self.hash_)
+
     def __repr__(self):
         return '<Buddy %r>' % self.name
 
@@ -52,7 +56,7 @@ class Buddy(BaseModel):
         return cls(**row)
 
     def get_events(self, from_db=False):
-        sql = 'SELECT * FROM event' \
+        sql = 'SELECT event.* FROM event' \
               ' JOIN event_to_buddies as map' \
               ' WHERE map.buddy_id = ?' \
               '   AND map.event_id = event.id_'
@@ -61,12 +65,12 @@ class Buddy(BaseModel):
             self.buddies = defaultdict(list)
             rows = query_db(sql, [self.id_])
             for row in rows:
-                unused = self.buddies[Event(*row)]
+                unused = self.buddies[Event(**row)]
 
         return self.buddies.keys()
 
     def get_buddies(self, from_db=False):
-        sql = 'SELECT * from buddy' \
+        sql = 'SELECT buddy.* from buddy' \
               ' JOIN pair' \
               ' WHERE pair.santa_id = ?' \
               '   AND pair.event_id = ?' \
@@ -77,37 +81,39 @@ class Buddy(BaseModel):
             for ev in events:
                 rows = query_db(sql, [self.id_, ev.id_])
                 for row in rows:
-                    b = Buddy(*row)
+                    b = Buddy(**row)
                     self.buddies[ev].append(b)
 
         return self.buddies.values()
 
-    def commit(self):
-        ev_sql = 'INSERT INTO event_to_buddy (event_id, buddy_id) VALUES (?, ?)'
-        bud_sql = 'INSERT INTO pair (santa_id, buddy_id, event_id) VALUES (?, ?, ?)'
+    def get_restrictions(self):
+        sql = 'SELECT buddy.* from buddy' \
+              ' JOIN restrictions' \
+              ' WHERE restrictions.santa_id = ?' \
+              '   AND restrictions.buddy_id = buddy.id_'
 
+        result = []
+        rows = query_db(sql, [self.id_])
+        for row in rows:
+            result.append(Buddy(**row))
+
+        return result
+
+    def commit(self):
         try:
             with get_db():
                 if self.id_ is None:
-                    # new buddy, try to insert into db
+                    # new buddy
                     sql = 'INSERT INTO buddy (hash_, name, email, bio) VALUES (?, ?, ?, ?)'
                     cur = get_db().execute(sql, (self.hash_, self.name, self.email, self.bio))
 
                     self.id_ = cur.lastrowid
 
-                    '''
-                    for (ev, bud_list) in self.buddies.items():
-                        if ev.id_ is None:
-                            raise NotImplementedError('event does not exist?')
-                        get_db().execute(ev_sql, [ev.id_, self.id_])
-                        for bud in bud_list:
-                            if bud.id_ is None:
-                                raise NotImplementedError('buddy does not exist?')
-                            get_db().execute(bud_sql, [self.id_, bud.id_, ev.id_])
-                    '''
+                    sql = 'INSERT INTO restrictions (santa_id, buddy_id) VALUES (?, ?)'
+                    cur = get_db().execute(sql, (self.id_, self.id_))
 
                 else:
-                    # existing buddy, try to update db
+                    # existing buddy
                     sql = 'UPDATE buddy SET hash_ = ?, name = ?, email = ?, bio = ? WHERE ? = id_'
                     cur = get_db().execute(sql, (self.hash_, self.name, self.email, self.bio, self.id_))
 
@@ -116,12 +122,13 @@ class Buddy(BaseModel):
 
 
 class Event(BaseModel):
-    def __init__(self, name, description=None, image=None, start_date=None, id_=None):
+    def __init__(self, name, description=None, image=None, start_date=None, id_=None, num_per_santa=None):
         self.id_ = id_   # if None, let db assign id
         self.name = name
         self.description = description or ''
         self.image = image
         self.start_date = start_date
+        self.num_per_santa = num_per_santa
 
         # [ Buddy, ]
         self.owners = []
@@ -165,6 +172,7 @@ class Event(BaseModel):
 
     def start(self):
         assert self.id_ is not None
+        assert self.num_per_santa in range(1, len(self.buddies))
 
         # 1. validate the event
 
@@ -176,6 +184,8 @@ class Event(BaseModel):
 
         # 2. assign secret santas
 
+        seed()  # make sure this is random
+
         # { santa : buddy }
         assigned = {}
         santas = set(self.buddies[:])
@@ -183,21 +193,31 @@ class Event(BaseModel):
 
         while len(santas) > 0:
             assert len(santas) == len(buddies)
-            # get (and remove) santa from remaining list
+            # pick (and remove) santa from remaining list
             s = santas.pop()
 
             # remove invalid buddy assignments from available buddy list;
             # randomly pick buddy from list
-            available = list(buddies - {s})
+            available = list(buddies - set(s.get_restrictions()))
+            app.logger.debug('available buddies for {}: {}'.format(s, available))
             b = available[randint(0, len(available) - 1)]
             buddies.remove(b)
+
+            # make sure last santa is not assigned themselves;
+            # note: only pop santa/buddy off lists if making assignment
+            if len(santas) == 1:
+                assert len(buddies) == 1
+                s_last = list(santas)[0]  # peak at last santa
+                if s_last in buddies:
+                    assigned[santas.pop()] = b  # assign buddy to last santa
+                    b = buddies.pop()  # pop last buddy from list
 
             # validate and save assignment
             assert s != b
             assigned[s] = b
 
         assert 0 == len(santas) == len(buddies)
-        assert len(assigned) == len(self.buddies)
+        assert len(assigned) == (self.num_per_santa * len(self.buddies))
 
         # 3. commit results
         with get_db():
