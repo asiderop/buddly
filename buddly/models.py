@@ -7,6 +7,10 @@ from random import randint
 from buddly.db import query_db, get_db
 
 
+class ApplicationError(Exception):
+    pass
+
+
 class BaseModel(object):
     pass
 
@@ -165,10 +169,10 @@ class Event(BaseModel):
         # 1. validate the event
 
         if self.start_date is not None:
-            raise IntegrityError('event has already started?')
+            raise ApplicationError('event has already started?')
 
         if len(self.buddies) < 3:
-            raise IntegrityError('event must have at least three buddies!')
+            raise ApplicationError('event must have at least three buddies!')
 
         # 2. assign secret santas
 
@@ -208,9 +212,9 @@ class Event(BaseModel):
         assert self.id_ is None
 
         if len(self.buddies) < 1:
-            raise IntegrityError('event must have at least one buddy')
+            raise ApplicationError('event must have at least one buddy')
         if len(self.owners) < 1:
-            raise IntegrityError('event must have at least one owner')
+            raise ApplicationError('event must have at least one owner')
 
         for o in self.owners:
             assert o in self.buddies

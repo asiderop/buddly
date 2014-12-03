@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, flash
 
 # extensions
 from flask_debugtoolbar import DebugToolbarExtension
@@ -24,6 +24,11 @@ app.config.from_object(__name__)
 # add debug toolbar (only when app.debug is True)
 toolbar = DebugToolbarExtension(app)
 
+
+def eflash(message):
+    flash(message, 'error')
+
+
 # create Mail instance for sending emails
 mail = Mail(app)
 
@@ -38,3 +43,4 @@ if app.testing:
         app.logger.debug(message)
 
     email_dispatched.connect(log_message)
+

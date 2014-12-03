@@ -1,9 +1,8 @@
 from sqlite3 import IntegrityError
 from flask import request, session, render_template, flash, redirect, url_for
-from time import time
 
-from buddly import app
-from buddly.models import Buddy, Event
+from buddly import app, eflash
+from buddly.models import Buddy, Event, ApplicationError
 from buddly.forms import EventCreation, EventBuddies
 from buddly.views.authentication import login_required
 
@@ -78,14 +77,17 @@ def event_launch(id_):
 
     e = Event.from_db(id_)
     if e is None:
-        flash("Sorry, I don't know that event.")
+        eflash("Sorry, I don't know that event.")
 
     else:
         try:
             e.start()
             flash('Your event has launched!')
+        except ApplicationError as e:
+            eflash("Wait, " + e.message)
         except IntegrityError as e:
-            flash("Wait, " + e.message)
+            app.logger.error('IntegrityError while starting event: ' + e.message)
+            eflash("Wait, an error occurred while launching event. :/")
 
     return redirect(url_for('event_details', id_=id_))
 
