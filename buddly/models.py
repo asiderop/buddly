@@ -1,6 +1,8 @@
 from uuid import uuid4 as uuid
 from collections import defaultdict
 from sqlite3 import IntegrityError
+from time import time, localtime, asctime
+from random import randint
 
 from buddly.db import query_db, get_db
 
@@ -124,6 +126,12 @@ class Event(BaseModel):
     def __repr__(self):
         return '<Event %r>' % self.name
 
+    @property
+    def date(self):
+        if self.start_date is not None:
+            return asctime(localtime(self.start_date))
+        return ''
+
     @classmethod
     def from_db(cls, id_):
 
@@ -151,31 +159,74 @@ class Event(BaseModel):
 
         return e
 
-    def commit(self):
-        if self.id_ is None:
-            if len(self.buddies) < 1:
-                raise IntegrityError('event must have at least one buddy')
-            if len(self.owners) < 1:
-                raise IntegrityError('event must have at least one owner')
+    def start(self):
+        assert self.id_ is not None
 
-            for o in self.owners:
-                assert o in self.buddies
+        # 1. validate the event
 
-            try:
-                with get_db():
-                    # new event, try to insert into db
-                    sql = 'INSERT INTO event (name, description, image, start_date) VALUES (?, ?, ?, ?)'
-                    cur = get_db().execute(sql, (self.name, self.description, self.image, self.start_date))
+        if self.start_date is not None:
+            raise IntegrityError('event has already started?')
 
-                    self.id_ = cur.lastrowid
+        if len(self.buddies) < 3:
+            raise IntegrityError('event must have at least three buddies!')
 
-                    for b in self.buddies:
-                        # insert rows to map event to buddies
-                        sql = 'INSERT INTO event_to_buddies (event_id, buddy_id, is_owner) VALUES (?, ?, ?)'
-                        cur = get_db().execute(sql, (self.id_, b.id_, b in self.owners))
+        # 2. assign secret santas
 
-            except IntegrityError:
-                raise
+        # { santa : buddy }
+        assigned = {}
+        santas = set(self.buddies[:])
+        buddies = set(self.buddies[:])
 
-        else:
-            raise NotImplementedError('cannot do update')
+        while len(santas) > 0:
+            assert len(santas) == len(buddies)
+            # get (and remove) santa from remaining list
+            s = santas.pop()
+
+            # remove invalid buddy assignments from available buddy list;
+            # randomly pick buddy from list
+            available = list(buddies - {s})
+            b = available[randint(0, len(available) - 1)]
+            buddies.remove(b)
+
+            # validate and save assignment
+            assert s != b
+            assigned[s] = b
+
+        assert 0 == len(santas) == len(buddies)
+        assert len(assigned) == len(self.buddies)
+
+        # 3. commit results
+        with get_db():
+            sql = 'INSERT INTO pair (santa_id, buddy_id, event_id) VALUES (?, ?, ?)'
+            pairs = [(santa.id_, buddy.id_, self.id_) for (santa, buddy) in assigned.items()]
+            get_db().executemany(sql, pairs)
+
+            sql = 'UPDATE event SET start_date = ? WHERE ? = id_'
+            cur = get_db().execute(sql, (time(), self.id_))
+
+    def commit_new(self):
+        assert self.id_ is None
+
+        if len(self.buddies) < 1:
+            raise IntegrityError('event must have at least one buddy')
+        if len(self.owners) < 1:
+            raise IntegrityError('event must have at least one owner')
+
+        for o in self.owners:
+            assert o in self.buddies
+
+        try:
+            with get_db():
+                # new event, try to insert into db
+                sql = 'INSERT INTO event (name, description, image, start_date) VALUES (?, ?, ?, ?)'
+                cur = get_db().execute(sql, (self.name, self.description, self.image, self.start_date))
+
+                self.id_ = cur.lastrowid
+
+                for b in self.buddies:
+                    # insert rows to map event to buddies
+                    sql = 'INSERT INTO event_to_buddies (event_id, buddy_id, is_owner) VALUES (?, ?, ?)'
+                    cur = get_db().execute(sql, (self.id_, b.id_, b in self.owners))
+
+        except IntegrityError:
+            raise

@@ -17,13 +17,13 @@
     {{ render_field(form.description) }}
     {{ render_field(form.image) }}
   </dl>
-  <p>Start Time: {{ event.start_time }}</p>
+  <p>Start Time: {{ event.date }}</p>
   <p><input type="submit" value="Save Changes">
 </form>
 {% else %}
 <h3>{{ event.name }}</h3>
 <p>{{ event.description }}</p>
-<p>Start Time: {{ event.start_time }}</p>
+<p>Start Time: {{ event.date }}</p>
 {% endif %}
 
 <h4>Buddies</h4>

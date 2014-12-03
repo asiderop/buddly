@@ -37,7 +37,7 @@ def event_create():
             e.owners.append(owner)
 
             try:
-                e.commit()
+                e.commit_new()
                 flash('Sweet. Your event has been created.')
             except IntegrityError:
                 err = 'Something went wrong. :('
@@ -71,6 +71,25 @@ def event_details(id_):
 
     return render_template('event-details.html', error=err, event=e, form=form, is_owner=is_owner)
 
+
+@app.route('/event/<id_>/launch', methods=['POST'])
+@login_required
+def event_launch(id_):
+
+    e = Event.from_db(id_)
+    if e is None:
+        flash("Sorry, I don't know that event.")
+
+    else:
+        try:
+            e.start()
+            flash('Your event has launched!')
+        except IntegrityError as e:
+            flash("Wait, " + e.message)
+
+    return redirect(url_for('event_details', id_=id_))
+
+
 @app.route('/event/<id_>/buddies/', methods=['GET', 'POST'])
 @login_required
 def event_buddies(id_):
@@ -89,24 +108,9 @@ def event_buddies(id_):
                 buddy = Buddy(name=form.name.data, email=form.email.data)
                 buddy.commit()
             e.buddies.append(buddy)
-            e.commit()
+            e.commit_new()
 
             form = EventBuddies()
             flash('Buddy added to event.')
 
     return render_template('event-buddy.html', form=form, event=e, error=err)
-
-
-@app.route('/event/<id_>/launch', methods=['POST'])
-@login_required
-def event_launch(id_):
-
-    e = Event.from_db(id_)
-    if e is None:
-        flash("Sorry, I don't know that event.")
-        redirect(url_for('event_details', id_=id_))
-
-    e.start_date = time()
-    e.commit()
-    flash('Your event has launched!')
-    redirect(url_for('event_details', id_=id_))
