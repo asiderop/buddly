@@ -1,9 +1,10 @@
 from sqlite3 import IntegrityError
 from flask import request, session, render_template, flash, redirect, url_for
 
-from buddly import app, eflash
+from buddly import app
 from buddly.models import Buddy, Event, ApplicationError
 from buddly.forms import EventCreation, EventBuddies
+from buddly.views import eflash
 from buddly.views.authentication import login_required
 
 @app.route('/event/', methods=['GET', 'POST'])

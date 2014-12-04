@@ -1,7 +1,13 @@
-from flask import render_template
+from flask import render_template, flash
 
 from buddly import app
 from buddly.db import get_db, query_db
+
+
+# helper functions
+
+def eflash(message):
+    flash(message, 'error')
 
 
 @app.route('/')
