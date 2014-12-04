@@ -1,5 +1,7 @@
-from flask import g
+from os.path import join
 from sqlite3 import connect, Row
+
+from flask import g
 
 from buddly import app
 
@@ -22,7 +24,7 @@ def dump():
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = connect(app.config['DATABASE'])
+        db = g._database = connect(join(app.instance_path, app.config['DATABASE']))
         db.row_factory = Row
         db.execute('PRAGMA foreign_keys = ON;')
     return db
