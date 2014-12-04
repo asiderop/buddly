@@ -1,4 +1,4 @@
-from wtforms import Form, StringField, TextAreaField, FieldList, FormField, validators as v
+from wtforms import StringField, TextAreaField, IntegerField, validators as v
 from flask_wtf import Form as FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 
@@ -70,3 +70,10 @@ class EventCreation(FlaskForm):
             FileAllowed(['gif', 'jpeg', 'jpg', 'png'], 'Images only!')
         ])
 
+    num_buddies = IntegerField(
+        'Buddies per Santa',
+        [
+            v.NumberRange(min=1)
+        ],
+        default=1
+    )

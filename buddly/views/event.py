@@ -26,9 +26,11 @@ def event_create():
                     base64_image = b64encode(i.make_blob('png'))
 
             e = Event(
-                form.name.data,
-                form.description.data,
-                base64_image)
+                name=form.name.data,
+                description=form.description.data,
+                image=base64_image,
+                num_per_santa=form.num_buddies,
+                )
 
             owner = Buddy.from_db(hash_=session.get('hash_'))
             assert owner is not None
