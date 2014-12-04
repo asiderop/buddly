@@ -62,7 +62,7 @@ def send_signup_email(buddy, action):
     message = None
     assert isinstance(buddy, Buddy)
 
-    msg = Message("Hello", recipients=["alexander@thequery.net"])
+    msg = Message("Hello!", recipients=[buddy.email])
     msg.html = render_template('email-signup.html', b=buddy)
     mail.send(msg)
 
