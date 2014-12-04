@@ -4,18 +4,20 @@ from sqlite3 import connect, Row
 from buddly import app
 
 
-def init_db():
+def init():
     with app.app_context():
         db = get_db()
         with app.open_resource('schema.sql', mode='r') as f:
             db.cursor().executescript(f.read())
         db.commit()
 
-def dump_db():
+
+def dump():
     with app.app_context():
         db = get_db()
         for line in db.iterdump():
-             print('%s\n' % line)
+            print('%s\n' % line)
+
 
 def get_db():
     db = getattr(g, '_database', None)
