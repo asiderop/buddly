@@ -10,7 +10,7 @@ from flask_mail import Mail, email_dispatched
 class Config(object):
     MAX_CONTENT_LENGTH = 2 * 1024 * 1024  # 2mb
     SERVER_NAME = 'buddly.local:5000'     # host name (with port)
-    SECRET_KEY = 'MUST BE OVERRIDDEN'     # unique value
+    SECRET_KEY = 'secret key'             # unique value, must be overridden
     DATABASE = 'buddly.db'                # in instance folder
     DEBUG = False
 
@@ -25,7 +25,7 @@ class Config(object):
 class DebugConfig(Config):
     DEBUG = True
     TESTING = True
-    SECRET_KEY = 'development key'
+    #SECRET_KEY = 'development key'
 
     # debug toolbar config
     DEBUG_TB_INTERCEPT_REDIRECTS = False
@@ -46,8 +46,6 @@ elif getenv('BUDDLY_TEST', False):
 else:
     app.config.from_object('buddly.Config')
 app.config.from_pyfile('buddly.cfg', silent=True)
-
-assert app.config['SECRET_KEY'] != Config.SECRET_KEY, "you must override the SECRET_KEY"
 
 # add debug toolbar (only when app.debug is True)
 toolbar = DebugToolbarExtension(app)

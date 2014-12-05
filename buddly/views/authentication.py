@@ -85,11 +85,11 @@ def login(n=None):
     b = Buddy.from_db(hash_=h)
 
     if b is None:
-        return render_template('login.html', error='unknown user')
+        return render_template('login.html', error='Sorry, unknown user.')
 
     session['hash_'] = b.hash_
     session['name'] = b.name  # for convenience in templates
-    flash('You were logged in')
+    flash('You were logged in.')
     url = n or url_for('index')
     return redirect(url)
 
@@ -97,7 +97,7 @@ def login(n=None):
 @app.route('/logout')
 def logout():
     session.pop('hash_', None)
-    flash('You were logged out')
+    flash('You were logged out.')
     return redirect(url_for('index'))
 
 
